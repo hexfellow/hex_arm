@@ -28,7 +28,7 @@ class DataInterface(InterfaceBase):
         return not rospy.is_shutdown()
 
     def shutdown(self):
-        rospy.signal_shutdown()
+        rospy.signal_shutdown("Shutdown")
 
     def sleep(self):
         self.__rate.sleep()
