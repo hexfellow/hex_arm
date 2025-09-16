@@ -5,7 +5,7 @@ import json
 import numpy as np
 from math import pi as PI
 from dataclasses import dataclass
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 from std_msgs.msg import UInt8MultiArray, String
 from sensor_msgs.msg import JointState
@@ -37,22 +37,38 @@ class ArmDataInterface:
 
         self.__last_positions = None
         self.__last_velocities = None
-        self.json_path = self.data_interface.get_pkg_share_path("hex_arm") + "/config/joints.json"
-        self.__motor_count: int = 1
+        self.joints_json_path = self.data_interface.get_pkg_share_path("hex_arm") + "/config/joints.json"
+        self.pose_init_json_path = self.data_interface.get_pkg_share_path("hex_arm") + "/config/init_pose.json"
+        self.__motor_count: Optional[int] = None
         self.__api_initialized: bool = False
+        self.pose_initialized: bool = False
         self.__motor_temperatures = None
         self.__pulse_per_rotation_list = None
+        self.__current_positions = None
 
         self.joints: List[JointParam] = []
-        json_data = self.data_interface.load_from_json(self.json_path)
-        if json_data is not None:
-            if isinstance(json_data["joints"], List):
-                for joint_data in json_data["joints"]:
+        joints_data = self.data_interface.load_from_json(self.joints_json_path)
+        if joints_data is not None:
+            if isinstance(joints_data["joints"], List):
+                for joint_data in joints_data["joints"]:
                     self.joints.append(JointParam(joint_name=joint_data["joint_name"], joint_limit=joint_data["joint_limit"]))
-                self.data_interface.logi(f"Load joint parameters from {self.json_path}.")
+                self.data_interface.logi(f"Load joint parameters from {self.joints_json_path}.")
                 self.data_interface.logi(f"Joint parameters: {self.joints}.")
             else:
-                self.data_interface.loge(f"Error: Please check your joints parameters in {self.json_path}.")
+                self.data_interface.loge(f"Error: Please check your joints parameters in {self.joints_json_path}.")
+
+        self.pose_init_params: List[float] = []
+        self.step_limits: List[float] = []
+        pose_init_data = self.data_interface.load_from_json(self.pose_init_json_path)
+        if pose_init_data is not None:
+            if isinstance(pose_init_data["init_pose"], List) and isinstance(pose_init_data["step_limits"], List):
+                self.pose_init_params = pose_init_data["init_pose"]
+                self.step_limits = pose_init_data["step_limits"]
+                self.data_interface.logi(f"Load initial pose parameters from {self.pose_init_json_path}.")
+                self.data_interface.logi(f"Initial pose parameters: {self.pose_init_params}.")
+                self.data_interface.logi(f"Step limits: {self.step_limits}.")
+            else:
+                self.data_interface.loge(f"Error: Please check your initial pose parameters in {self.pose_init_json_path}.")
         
         self.data_interface.logi("ArmDataInterface initialized.")
 
@@ -78,11 +94,12 @@ class ArmDataInterface:
         self.__motor_temperatures = [motor.motor_temperature for motor in api_up.arm_status.motor_states]
         # parse data
         pp, vv, tt, self.__pulse_per_rotation_list= self.prase_motor_data(api_up)
+        self.__current_positions = pp
         # publish data
         self.__pub_motor_status(pp, vv, tt)
 
     def __joints_cmd_callback(self, msg: XmsgArmJointParamList):
-        if msg.joints is not None:
+        if msg.joints is not None and self.pose_initialized:
             if not self.__api_initialized:
                 api_init = public_api_down_pb2.APIDown()
                 api_init.arm_command.api_control_initialize = True
@@ -257,10 +274,33 @@ class ArmDataInterface:
         except json.JSONDecodeError:
             self.data_interface.loge(f"Error: {extra_param_str} is not a valid value.")
             return {}
+        
+    def init_pose(self, init_pose: List[float], step_limits: List[float]):
+        while self.data_interface.ok() and not self.pose_initialized:
+            if self.__motor_count is not None and self.__current_positions is not None and self.__pulse_per_rotation_list is not None: 
+                if not self.__api_initialized:
+                    api_init = public_api_down_pb2.APIDown()
+                    api_init.arm_command.api_control_initialize = True
+                    bin = api_init.SerializeToString()
+                    self.__pub_ws_down(bin)
+                api_down = public_api_down_pb2.APIDown()
+                for i in range(self.__motor_count):
+                    error = init_pose[i] - self.__current_positions[i]
+                    error = np.clip(error, -step_limits[i], step_limits[i])
+                    target_position = self.__current_positions[i] + error
+                    api_down.arm_command.motor_targets.targets.add().position = int((target_position / (2 * PI)) * self.__pulse_per_rotation_list[i] + 65535.0 / 2.0)
+                bin = api_down.SerializeToString()
+                self.__pub_ws_down(list(bin))
+                if all(abs(init_pose[i] - self.__current_positions[i]) < 0.01 for i in range(self.__motor_count)):
+                    self.__pose_initialized = True
+                    self.data_interface.logi("Initial pose reached.")
+                    break
+            self.data_interface.sleep()
     
 def main():
     arm = ArmDataInterface()
     try:
+        arm.init_pose(arm.pose_init_params, arm.step_limits)
         while arm.data_interface.ok():
             arm.data_interface.sleep()
     except KeyboardInterrupt:
