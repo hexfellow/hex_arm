@@ -13,9 +13,6 @@ class InterfaceBase(ABC):
     def _init_node(self):
         raise NotImplementedError("InterfaceBase._init_node")
 
-    def __del__(self):
-        self.shutdown()
-
     @abstractmethod
     def create_publisher(self, msg_type, topic: str, queue_size: int = 10):
         raise NotImplementedError("InterfaceBase.create_publisher")
@@ -23,6 +20,12 @@ class InterfaceBase(ABC):
     @abstractmethod
     def create_subscriber(self, msg_type, topic: str, callback, queue_size: int = 10):
         raise NotImplementedError("InterfaceBase.create_subscriber")
+    
+    def create_timer(self, interval_sec: float, callback):
+        raise NotImplementedError("InterfaceBase.create_timer")
+    
+    def cancel_timer(self):
+        raise NotImplementedError("InterfaceBase.cancel_timer")
     
     @abstractmethod
     def set_parameter(self, name: str, value):

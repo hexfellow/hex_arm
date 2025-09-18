@@ -16,9 +16,11 @@ class DataInterface(InterfaceBase):
         self.__node = rclpy.node.Node(self._node_name)
         self.__logger = self.__node.get_logger()
         self.__rate = self.__node.create_rate(300.0)
+        self.timer = None
 
         # spin thread
         self.__spin_thread = threading.Thread(target=self.__spin)
+        self.__spin_thread.daemon = True
         self.__spin_thread.start()
 
     def create_publisher(self, msg_type, topic: str, queue_size: int = 10):
@@ -26,7 +28,16 @@ class DataInterface(InterfaceBase):
 
     def create_subscriber(self, msg_type, topic: str, callback, queue_size: int = 10):
         self.__node.create_subscription(msg_type, topic, callback, queue_size)
+
+    def create_timer(self, interval_sec: float, callback):
+        self.timer = self.__node.create_timer(interval_sec, callback)
+        return self.timer
     
+    def cancel_timer(self):
+        if self.timer is not None:
+            self.timer.cancel()
+            self.timer = None
+            
     def set_parameter(self, name: str, value):
         self.__node.declare_parameter(name, value)
 
@@ -40,9 +51,10 @@ class DataInterface(InterfaceBase):
         return rclpy.ok()
 
     def shutdown(self):
-        self.__node.destroy_node()
-        rclpy.shutdown()
         self.__spin_thread.join()
+        self.__node.destroy_node()
+        if self.ok():
+            rclpy.shutdown()
 
     def sleep(self):
         self.__rate.sleep()

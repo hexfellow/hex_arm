@@ -11,12 +11,21 @@ class DataInterface(InterfaceBase):
         # ros node
         rospy.init_node(self._node_name, anonymous=True)
         self.__rate = rospy.Rate(300.0)
+        self.timer = None
 
     def create_publisher(self, msg_type, topic: str, queue_size: int = 10):
         return rospy.Publisher(topic, msg_type, queue_size=queue_size)
     
     def create_subscriber(self, msg_type, topic: str, callback, queue_size: int = 10):
         rospy.Subscriber(topic, msg_type, callback, queue_size=queue_size)
+
+    def crearte_timer(self, interval_sec: float, callback):
+        self.timer = rospy.Timer(rospy.Duration(interval_sec), callback)
+    
+    def cancel_timer(self):
+        if self.timer is not None:
+            self.timer.shutdown()
+            self.timer = None
 
     def set_parameter(self, name: str, value):
         rospy.set_param(name, value)
