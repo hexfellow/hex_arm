@@ -6,7 +6,11 @@ import tty
 import termios
 import time
 import argparse
-from .ros_interface import DataInterface
+import os
+import sys
+script_path = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(script_path)
+from ros_interface import DataInterface
 from xpkg_arm_msgs.msg import XmsgArmJointParam, XmsgArmJointParamList
 
 class XmsgInterface:
@@ -47,9 +51,7 @@ def main():
             xmsg_interface.pub_joints_cmd(pos=args.pos)
             xmsg_interface.data_interface.sleep()
     except KeyboardInterrupt:
-        pass
-    finally:
-        xmsg_interface.data_interface.shutdown()
+        xmsg_interface.data_interface.shutdown()      
 
 if __name__ == "__main__":
     main()

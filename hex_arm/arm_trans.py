@@ -332,7 +332,7 @@ class ArmDataInterface:
         
     def init_pose(self):
         self.data_interface.create_timer(0.01, self.__init_pose_callback)
-    def __init_pose_callback(self):
+    def __init_pose_callback(self, *args):
         if self.pose_initialized:
             self.data_interface.cancel_timer()
             return

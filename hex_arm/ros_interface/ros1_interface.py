@@ -19,7 +19,7 @@ class DataInterface(InterfaceBase):
     def create_subscriber(self, msg_type, topic: str, callback, queue_size: int = 10):
         rospy.Subscriber(topic, msg_type, callback, queue_size=queue_size)
 
-    def crearte_timer(self, interval_sec: float, callback):
+    def create_timer(self, interval_sec: float, callback):
         self.timer = rospy.Timer(rospy.Duration(interval_sec), callback)
     
     def cancel_timer(self):
