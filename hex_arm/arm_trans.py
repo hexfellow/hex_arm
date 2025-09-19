@@ -44,6 +44,7 @@ class ArmDataInterface:
         self.__motor_temperatures = None
         self.__pulse_per_rotation_list = None
         self.__current_positions = None
+        self.__current_velocities = None
         self.__parking_stop_detail = public_api_types_pb2.ParkingStopDetail()
         self.__last_warning_time = time.perf_counter()
 
@@ -105,8 +106,9 @@ class ArmDataInterface:
             else:
                 self.__parking_stop_detail = public_api_types_pb2.ParkingStopDetail()
             # parse data
-            pp, vv, tt, self.__pulse_per_rotation_list= self.parse_motor_data(api_up)
+            pp, vv, tt, self.__pulse_per_rotation_list = self.parse_motor_data(api_up)
             self.__current_positions = pp
+            self.__current_velocities = vv
         # publish data
         self.__pub_motor_status(pp, vv, tt)
 
@@ -151,13 +153,9 @@ class ArmDataInterface:
             velocities = np.array([joint.velocity for joint in msg.joints])
             efforts = np.array([joint.effort for joint in msg.joints])
             extra_params = [joint.extra_param for joint in msg.joints]
-
-            self.data_interface.logi(f"pos: {positions}")
             
             positions = self.validate_joint_positions(positions)
             velocities = self.validate_joint_velocities(velocities)
-
-            # self.data_interface.logi(f"pos: {positions}")
 
             api_down = public_api_down_pb2.APIDown()
             joint_states: List[Dict] = []
@@ -249,7 +247,8 @@ class ArmDataInterface:
     
     def validate_joint_positions(self, positions: np.ndarray, dt: float = 0.01) -> np.ndarray:
         validated_positions = np.zeros_like(positions)
-        last_positions = np.array(self.__last_positions) if self.__last_positions is not None else None
+        with self.__lock:
+            last_positions = np.array(self.__last_positions) if self.__last_positions is not None else np.array(self.__current_positions)
 
         for i, (position, joint) in enumerate(zip(positions, self.joints)):
             min_pos, max_pos = joint.joint_limit[0], joint.joint_limit[1]
@@ -281,7 +280,8 @@ class ArmDataInterface:
     
     def validate_joint_velocities(self, velocities: np.ndarray, dt: float = 0.01) -> np.ndarray:
         validated_velocities = np.zeros_like(velocities)
-        last_velocities = np.array(self.__last_velocities) if self.__last_velocities is not None else None
+        with self.__lock:
+            last_velocities = np.array(self.__last_velocities) if self.__last_velocities is not None else np.array(self.__current_velocities)
 
         for i, (velocity, joint) in enumerate(zip(velocities, self.joints)):
             min_vel, max_vel = joint.joint_limit[2], joint.joint_limit[3]

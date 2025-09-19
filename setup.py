@@ -38,7 +38,6 @@ setup(
         'console_scripts': [
             "arm_trans = hex_arm.arm_trans:main",
             "pub_xmsg = hex_arm.pub_xmsg:main",
-            "test = hex_arm.test:main"
         ],
     },
 )
