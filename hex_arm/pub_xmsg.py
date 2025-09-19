@@ -22,12 +22,12 @@ class XmsgInterface:
         now_time = time.time()
         msg = XmsgArmJointParamList(
             joints=[
-                XmsgArmJointParam(mode="position_mode", position=pos, velocity=0.0, effort=0.0, extra_param="{\"braking_state\": true}"),
-                XmsgArmJointParam(mode="position_mode", position=pos, velocity=0.0, effort=0.0, extra_param=""),
-                XmsgArmJointParam(mode="position_mode", position=pos, velocity=0.0, effort=0.0, extra_param=""),
-                XmsgArmJointParam(mode="position_mode", position=pos, velocity=0.0, effort=0.0, extra_param=""),
-                XmsgArmJointParam(mode="position_mode", position=pos, velocity=0.0, effort=0.0, extra_param=""),
-                XmsgArmJointParam(mode="position_mode", position=pos, velocity=0.0, effort=0.0, extra_param=""),
+                XmsgArmJointParam(mode="mit_mode", position=-3.0, velocity=0.0, effort=0.0, extra_param="{\"mit_kp\": 20.0, \"mit_kd\": 1.0}"),
+                XmsgArmJointParam(mode="torque_mode", position=pos, velocity=0.0, effort=0.1, extra_param=""),
+                XmsgArmJointParam(mode="velocity_mode", position=pos, velocity=0.0, effort=0.0, extra_param=""),
+                XmsgArmJointParam(mode="", position=pos, velocity=0.0, effort=0.05, extra_param=""),
+                XmsgArmJointParam(mode="", position=pos, velocity=0.0, effort=0.05, extra_param=""),
+                XmsgArmJointParam(mode="", position=pos, velocity=0.0, effort=0.05, extra_param=""),
             ]
         )
 

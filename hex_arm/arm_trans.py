@@ -196,22 +196,23 @@ class ArmDataInterface:
                             'motor_temperature': motor_temperatures[i] if motor_temperatures is not None and i < len(motor_temperatures) else None
                         }
                     elif modes[i] == "mit_mode":
-                        joint_cmd = api_down.arm_command.motor_targets.targets.add()
-                        joint_cmd.mit_target.position = positions[i]
-                        joint_cmd.mit_target.speed = velocities[i]
-                        joint_cmd.mit_target.torque = efforts[i]
-                        joint_cmd.mit_target.kp = extra_param.get('mit_kp', 0.0)
-                        joint_cmd.mit_target.kd = extra_param.get('mit_kd', 0.0)
-                        joint_state = {
-                            'control_mode': {
-                                "mit_mode": [
-                                    extra_param.get('mit_kp', 0.0),
-                                    extra_param.get('mit_kd', 0.0)
-                                ]
-                            },
-                            'braking_state': False,
-                            'motor_temperature': motor_temperatures[i] if motor_temperatures is not None and i < len(motor_temperatures) else None
-                        }
+                        if pulse_per_rotation_list is not None and len(pulse_per_rotation_list) == length:
+                            joint_cmd = api_down.arm_command.motor_targets.targets.add()
+                            joint_cmd.mit_target.position = int((positions[i] / (2 * PI)) * pulse_per_rotation_list[i] + 65535.0 / 2.0)
+                            joint_cmd.mit_target.speed = velocities[i]
+                            joint_cmd.mit_target.torque = efforts[i]
+                            joint_cmd.mit_target.kp = extra_param.get('mit_kp', 0.0)
+                            joint_cmd.mit_target.kd = extra_param.get('mit_kd', 0.0)
+                            joint_state = {
+                                'control_mode': {
+                                    "mit_mode": [
+                                        extra_param.get('mit_kp', 0.0),
+                                        extra_param.get('mit_kd', 0.0)
+                                    ]
+                                },
+                                'braking_state': False,
+                                'motor_temperature': motor_temperatures[i] if motor_temperatures is not None and i < len(motor_temperatures) else None
+                            }
                     else:
                         self.data_interface.logw(f"Unknown mode: {modes[i]}. Set speed to 0.0.")
                         joint_cmd = api_down.arm_command.motor_targets.targets.add()
@@ -375,20 +376,6 @@ class ArmDataInterface:
                 self.pose_initialized = True
                 self.data_interface.logi("Initial pose reached.")
                 self.data_interface.cancel_timer()
-        # self.debug()
-
-    def debug(self):
-        # pass
-        with self.__lock:
-            self.data_interface.logi(f"Current positions: {self.__current_positions}")
-            # self.data_interface.logi(f"Last positions: {self.__last_positions}")
-            # self.data_interface.logi(f"Last velocities: {self.__last_velocities}")
-            # self.data_interface.logi(f"Motor temperatures: {self.__motor_temperatures}")
-            # self.data_interface.logi(f"Pulse per rotation list: {self.__pulse_per_rotation_list}")
-            # self.data_interface.logi(f"API initialized: {self.__api_initialized}")
-            # self.data_interface.logi(f"Pose initialized: {self.pose_initialized}")
-            # self.data_interface.logi(f"Calibrated: {self.__calibrated}")
-            # self.data_interface.logi(f"motor_count: {self.__motor_count}")
 
 def main():
     arm = ArmDataInterface()
@@ -396,7 +383,6 @@ def main():
         arm.init_pose()
         while arm.data_interface.ok():
             arm.check_parking_stop_detail()
-            # arm.debug()
             arm.data_interface.sleep()
     except KeyboardInterrupt:
         arm.data_interface.logi("Received Ctrl-C.")
