@@ -22,6 +22,9 @@ from .motor_base import (
     MitMotorCommand
 )
 
+# Protobuf messages
+from .generated import public_api_up_pb2, public_api_down_pb2, public_api_types_pb2
+
 # Optional device implementations
 from .hands import Hands
 from .arm_archer import ArmArcher
@@ -56,7 +59,12 @@ __all__ = [
     'MotorCommand',
     'CommandType',
     'MitMotorCommand',
-    
+
+    # Protobuf messages
+    'public_api_up_pb2',
+    'public_api_down_pb2',
+    'public_api_types_pb2',
+
     # Optional device implementations
     'Hands',
 
