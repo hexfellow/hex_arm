@@ -5,7 +5,7 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Dict, Optional
-from hex_arm.hex_device import ArmArcher, Hands
+from hex_arm.hex_device import Arm, Hands
 from hex_device import public_api_types_pb2
 from hex_arm.hex_device.motor_base import CommandType, MitMotorCommand, MotorBase
 
@@ -38,7 +38,7 @@ class InterfaceBase(ABC):
         self._name = name
 
         # api parameters
-        self.arm: Optional[ArmArcher] = None
+        self.arm: Optional[Arm] = None
         self.hands: Optional[Hands] = None
 
         print(f"#### InterfaceBase init: {self._name} ####")

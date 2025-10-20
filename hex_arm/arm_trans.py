@@ -14,7 +14,7 @@ script_path = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(script_path)
 
 from ros_interface import DataInterface
-from hex_device import Hands, ArmArcher
+from hex_device import Hands, Arm
 from ros_interface import GripperConfig, ArmConfig
 from hex_device.motor_base import CommandType
 
@@ -29,8 +29,8 @@ class HexArmApi:
 
         # init arm
         arm_config = ArmConfig()
-        if ArmArcher._supports_robot_type(self.data_interface.arm_series):
-            self.data_interface.arm = ArmArcher(
+        if Arm._supports_robot_type(self.data_interface.arm_series):
+            self.data_interface.arm = Arm(
                 self.data_interface.arm_series,
                 arm_config.arm_motor_map[self.data_interface.arm_series],
                 control_hz = self.data_interface.ros_rate,
