@@ -14,9 +14,8 @@ script_path = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(script_path)
 
 from ros_interface import DataInterface
-from hex_device import Hands, Arm
+from hex_arm.hex_device import Hands, Arm, CommandType
 from ros_interface import GripperConfig, ArmConfig
-from hex_device.motor_base import CommandType
 
 @dataclass
 class JointParam:

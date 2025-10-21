@@ -5,9 +5,8 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Dict, Optional
-from hex_arm.hex_device import Arm, Hands
+from hex_arm.hex_device import Arm, Hands, CommandType, MitMotorCommand, MotorBase
 from hex_device import public_api_types_pb2
-from hex_arm.hex_device.motor_base import CommandType, MitMotorCommand, MotorBase
 
 
 class GripperConfig:
@@ -235,12 +234,12 @@ class InterfaceBase(ABC):
         
         try:
             if mode == 'mit_mode':
-                positions = [getattr(joint, 'position', 0.0) for joint in msg.joints]
-                velocities = [getattr(joint, 'velocity', 0.0) for joint in msg.joints]
-                efforts = [getattr(joint, 'effort', 0.0) for joint in msg.joints]
+                positions = [float(getattr(joint, 'position', 0.0)) for joint in msg.joints]
+                velocities = [float(getattr(joint, 'velocity', 0.0)) for joint in msg.joints]
+                efforts = [float(getattr(joint, 'effort', 0.0)) for joint in msg.joints]
                 
-                kps = [param.get('mit_kp', 0.0) for param in extra_params]
-                kds = [param.get('mit_kd', 0.0) for param in extra_params]
+                kps = [float(param.get('mit_kp', 0.0)) for param in extra_params]
+                kds = [float(param.get('mit_kd', 0.0)) for param in extra_params]
                 
                 mit_commands = [
                     MitMotorCommand(position=pos, speed=vel, torque=eff, kp=kp, kd=kd)
@@ -248,22 +247,18 @@ class InterfaceBase(ABC):
                 ]
                 
                 device.motor_command(CommandType.MIT, mit_commands)
-                self.logi(f"{device_name.capitalize()} MIT mode command sent: {len(mit_commands)} joints")
                 
             elif mode == 'position' or mode == 'position_mode':
-                positions = [getattr(joint, 'position', 0.0) for joint in msg.joints]
+                positions = [float(getattr(joint, 'position', 0.0)) for joint in msg.joints]
                 device.motor_command(CommandType.POSITION, positions)
-                self.logi(f"{device_name.capitalize()} position command sent: {positions}")
                 
             elif mode == 'velocity' or mode == 'speed' or mode == 'speed_mode':
-                velocities = [getattr(joint, 'velocity', 0.0) for joint in msg.joints]
+                velocities = [float(getattr(joint, 'velocity', 0.0)) for joint in msg.joints]
                 device.motor_command(CommandType.SPEED, velocities)
-                self.logi(f"{device_name.capitalize()} speed command sent: {velocities}")
                 
             elif mode == 'torque' or mode == 'effort' or mode == 'torque_mode':
-                torques = [getattr(joint, 'effort', 0.0) for joint in msg.joints]
+                torques = [float(getattr(joint, 'effort', 0.0)) for joint in msg.joints]
                 device.motor_command(CommandType.TORQUE, torques)
-                self.logi(f"{device_name.capitalize()} torque command sent: {torques}")
                 
             else:
                 self.logw(f"Unknown {device_name} command mode: {mode}")
