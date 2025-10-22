@@ -137,7 +137,7 @@ def main():
     try:
         while api.data_interface.ok():
             # init arm
-            if api.data_interface.arm is not None and api.data_interface._is_init is True:
+            if api.data_interface.arm is not None and api.data_interface._is_init is True and api.data_interface.arm._has_new_data:
                 if api.init_pose is not None and isinstance(api.init_pose, list):
                     # Get current position
                     current_pos = np.array(api.data_interface.arm.get_motor_positions())
