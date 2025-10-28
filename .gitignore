@@ -178,3 +178,5 @@ venv/
 
 # mac
 .DS_Store
+
+generated/

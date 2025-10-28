@@ -3,6 +3,9 @@
 
 import os
 
+from .interface_base import GripperConfig as GripperConfig
+from .interface_base import ArmConfig as ArmConfig
+
 ROS_VERSION = os.environ.get('ROS_VERSION')
 if ROS_VERSION == '1':
     from .ros1_interface import DataInterface as DataInterface
