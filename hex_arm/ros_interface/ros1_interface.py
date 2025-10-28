@@ -73,7 +73,19 @@ class DataInterface(InterfaceBase):
         return not rospy.is_shutdown()
 
     def shutdown(self):
-        rospy.signal_shutdown("Normal shutdown")
+        try:
+            # Cancel timer if exists
+            if hasattr(self, 'timer') and self.timer is not None:
+                try:
+                    self.cancel_timer()
+                except Exception:
+                    pass
+            # Signal shutdown to ROS
+            if not rospy.is_shutdown():
+                rospy.signal_shutdown("Normal shutdown")
+        except Exception:
+            # Ignore any shutdown errors
+            pass
 
     def sleep(self):
         try:

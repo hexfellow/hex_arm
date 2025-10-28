@@ -21,7 +21,7 @@ def generate_launch_description():
     )
     url = DeclareLaunchArgument(
         'url',
-        default_value='ws://172.18.23.18:8439',
+        default_value='ws://0.0.0.0:8439',
         description='The URL of the robot.'
     )
     read_only = DeclareLaunchArgument(
@@ -52,7 +52,7 @@ def generate_launch_description():
     )
     arm_series = DeclareLaunchArgument(
         'arm_series',
-        default_value='14',
+        default_value='16',
         description='The series of the Archer (integer).'
     )
 
@@ -89,8 +89,13 @@ def generate_launch_description():
             'arm_series': LaunchConfiguration('arm_series'),
         }],
         remappings=[
-            ('/joint_states', '/joint_states'),
-            ('/joints_cmd', '/joints_cmd'),
+            ('/ws_down', '/ws_down'),
+
+            ('/xtopic_arm/joint_states', '/xtopic_arm/joint_states'),
+            ('/xtopic_arm/joints_cmd', '/xtopic_arm/joints_cmd'),
+
+            ('/xtopic_arm/gripper_states', '/xtopic_arm/gripper_states'),
+            ('/xtopic_arm/gripper_cmd', '/xtopic_arm/gripper_cmd'),
         ]
     )
 

@@ -1,10 +1,17 @@
 <launch>
     <!-- arg -->
-    <arg name="url" default="" />
+    <arg name="enable_bridge" default="false" />
+    <arg name="url" default="ws://0.0.0.0:8439" />
     <arg name="read_only" default="false" />
 
+    <!-- hex_arm parameters -->
+    <arg name="joint_config_path" default="$(find hex_arm)/config/joints.json" />
+    <arg name="init_pose_path" default="$(find hex_arm)/config/init_pose.json" />
+    <arg name="gripper_type" default="0" />
+    <arg name="arm_series" default="16" />
+
     <!-- node -->
-    <node name="xnode_bridge" pkg="xpkg_bridge" type="xnode_bridge" respawn="false" output="screen" required="false">
+    <node name="xnode_bridge" pkg="xpkg_bridge" type="xnode_bridge" respawn="false" output="screen" required="false" if="$(arg enable_bridge)">
         <param name="url" value="$(arg url)"/>
         <param name="read_only" value="$(arg read_only)"/>
 
@@ -13,9 +20,18 @@
     </node>
 
     <node name="hex_arm" pkg="hex_arm" type="arm_trans.py" output="screen" >
-        
-        <remap from="/joint_states" to="/joint_states" />
+        <param name="joint_config_path" value="$(arg joint_config_path)" />
+        <param name="init_pose_path" value="$(arg init_pose_path)" />
+        <param name="gripper_type" value="$(arg gripper_type)" />
+        <param name="arm_series" value="$(arg arm_series)" />
 
-        <remap from="/joints_cmd" to="/joints_cmd" />
+        <!-- remap topics -->
+        <remap from="ws_down" to="/ws_down" />
+
+        <remap from="/xtopic_arm/joint_states" to="/xtopic_arm/joint_states" />
+        <remap from="/xtopic_arm/joints_cmd" to="/xtopic_arm/joints_cmd" />
+
+        <remap from="/xtopic_arm/gripper_states" to="/xtopic_arm/gripper_states" />
+        <remap from="/xtopic_arm/gripper_cmd" to="/xtopic_arm/gripper_cmd" />
     </node>
 </launch>
