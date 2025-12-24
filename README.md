@@ -1,4 +1,8 @@
 # hex_arm
+
+## Warning
+This repository has been discontinued for maintenance. Please proceed to: [hex_device](https://github.com/hexfellow/hex_device)
+
 ## Overview
 This is a ROS packdge that provides ROS interface for hex arm.
 ## Prerequisites & Usage
